@@ -25,7 +25,7 @@ public class ConnectionFactory {
 	 */
 	static {
 
-		// スレッドセーフなマップのインスタンス化
+		// リストのインスタンス化
 		_pooledInstances = init();
 	}
 
@@ -40,10 +40,10 @@ public class ConnectionFactory {
 		List<DummyConnecter> pooledInstances = java.util.Collections.synchronizedList(new ArrayList<DummyConnecter>());
 
 		// プールを初期化
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 5; i++) {
 
 			// 新規インスタンスを作成
-			DummyConnecter con = new DummyConnecter();
+			DummyConnecter con = new DummyConnecter(i);
 
 			// プールに追加
 			pooledInstances.add(con);
@@ -58,7 +58,7 @@ public class ConnectionFactory {
 	 * @param parameter
 	 * @return
 	 */
-	public DummyConnecter getPooledInstance() {
+	public static DummyConnecter getPooledInstance() {
 
 		DummyConnecter ret = null;
 		synchronized (_pooledInstances) {
@@ -74,6 +74,8 @@ public class ConnectionFactory {
 
 					// インスタンスの取得
 					ret = connecter.use();
+					allInstanceUsing = false;
+					break;
 				}
 			}
 
@@ -81,7 +83,7 @@ public class ConnectionFactory {
 			if (allInstanceUsing) {
 
 				// 新規インスタンスを作成
-				DummyConnecter con = new DummyConnecter();
+				DummyConnecter con = new DummyConnecter(_pooledInstances.size());
 
 				// プールに追加
 				_pooledInstances.add(con);
@@ -90,5 +92,18 @@ public class ConnectionFactory {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * インスタンスの返却
+	 *
+	 * @param con
+	 */
+	public static void returnInstance(DummyConnecter con) {
+
+		synchronized (_pooledInstances) {
+
+			_pooledInstances.set(con.getPooledIndex(), con);
+		}
 	}
 }

@@ -2,6 +2,8 @@ package org.creativebee.connectionsample.connection.dummy;
 
 import java.io.Closeable;
 
+import org.creativebee.connectionsample.connection.pool.ConnectionFactory;
+
 /**
  * 本コネクタを利用して、業務開発者は接続処理を行う。<br>
  * このクラスはアダプタパターン的に実装をしてください。
@@ -22,12 +24,19 @@ public class DummyConnecter implements Closeable {
 	protected Object obj;
 
 	/**
+	 *
+	 */
+	protected int pooledIndex;
+
+	/**
 	 * コンストラクタ
 	 */
-	public DummyConnecter() {
+	public DummyConnecter(int index) {
 
 		inUse = false;
 		obj = "インスタンスだよ";
+
+		pooledIndex = index;
 	}
 
 	/**
@@ -37,6 +46,10 @@ public class DummyConnecter implements Closeable {
 	 */
 	public boolean isInUse() {
 		return inUse;
+	}
+
+	public int getPooledIndex() {
+		return pooledIndex;
 	}
 
 	/**
@@ -63,6 +76,8 @@ public class DummyConnecter implements Closeable {
 		sb.append(":");
 		sb.append(parameter);
 		sb.append(":");
+		sb.append(Thread.currentThread().getId());
+		sb.append(":");
 		sb.append(this);
 
 		// 実際の送信処理を書く
@@ -77,5 +92,13 @@ public class DummyConnecter implements Closeable {
 	public void close() {
 
 		this.inUse = false;
+
+		ConnectionFactory.returnInstance(this);
 	}
+
+	@Override
+	public String toString() {
+		return "DummyConnecter [inUse=" + inUse + ", obj=" + obj + ", pooledIndex=" + pooledIndex + "]";
+	}
+
 }
